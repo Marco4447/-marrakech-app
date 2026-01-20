@@ -1,0 +1,204 @@
+Voici le code complet et optimisé. Copie l'intégralité du bloc ci-dessous et colle-le dans ton fichier app.py.
+
+code
+Python
+download
+content_copy
+expand_less
+import streamlit as st
+import pandas as pd
+import urllib.parse
+
+# --- 1. CONFIGURATION DE LA PAGE ---
+st.set_page_config(
+    page_title="Marrakech Foodie Guide",
+    page_icon="🕌",
+    layout="centered"
+)
+
+# --- 2. STYLE CSS (Pour l'effet "WOW") ---
+st.markdown("""
+<style>
+    /* Fond général */
+    .stApp {
+        background-color: #FAFAFA;
+        font-family: 'Helvetica Neue', sans-serif;
+    }
+    
+    /* Carte Restaurant */
+    .resto-card {
+        background-color: white;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+        transition: transform 0.2s;
+        border: 1px solid #eee;
+    }
+    .resto-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    /* Titres */
+    h3 { color: #333; margin-bottom: 5px; margin-top: 0; }
+    
+    /* Tags */
+    .tag {
+        background-color: #FFE0B2;
+        color: #E65100;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8em;
+        font-weight: bold;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+    
+    /* Avis */
+    .review {
+        font-style: italic;
+        color: #666;
+        font-size: 0.9em;
+        border-left: 3px solid #E65100;
+        padding-left: 10px;
+        margin-top: 5px;
+    }
+
+    /* Bouton Maps */
+    .maps-btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+        background-color: #4285F4;
+        color: white !important;
+        padding: 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: bold;
+        margin-top: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .maps-btn:hover {
+        background-color: #3367D6;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# --- 3. FONCTIONS (Données & Images) ---
+
+def get_cartoon_avatar(name, type_resto):
+    """Génère une illustration type cartoon/dessin via API DiceBear"""
+    seed = urllib.parse.quote(f"{name}{type_resto}")
+    # Style 'notionists' pour un look moderne et clean
+    return f"https://api.dicebear.com/7.x/notionists/svg?seed={seed}&backgroundColor=ffecd2"
+
+def get_marrakech_data(cuisine_filter):
+    """Données de démonstration pour Marrakech"""
+    data = [
+        {
+            "name": "Le Jardin",
+            "type": "Marocain Moderne",
+            "rating": 4.6,
+            "address": "32 Souk Jeld Sidi Abdelaziz, Marrakech",
+            "reviews": ["Oasis de verdure", "Tajine aux pruneaux top", "Ambiance magique"]
+        },
+        {
+            "name": "Nomad",
+            "type": "Fusion",
+            "rating": 4.5,
+            "address": "1 Derb Aarjan, Marrakech Medina",
+            "reviews": ["Vue coucher de soleil", "Cuisine moderne", "Il faut réserver"]
+        },
+        {
+            "name": "Al Fassia",
+            "type": "Marocain Traditionnel",
+            "rating": 4.7,
+            "address": "55 Boulevard Zerktouni, Gueliz, Marrakech",
+            "reviews": ["Institution féminine", "Épaule d'agneau légendaire", "Service impeccable"]
+        },
+        {
+            "name": "La Trattoria",
+            "type": "Italien",
+            "rating": 4.4,
+            "address": "179 Rue Mohammed Beqal, Marrakech",
+            "reviews": ["Cadre romantique piscine", "Pâtes aux truffes", "Un peu cher mais beau"]
+        },
+         {
+            "name": "Plus61",
+            "type": "Australien / Bistro",
+            "rating": 4.8,
+            "address": "96 Rue Mohammed Beqal, Marrakech",
+            "reviews": ["Ingrédients frais", "Loin du tumulte", "Cheesecake à tomber"]
+        },
+        {
+            "name": "Dar Yacout",
+            "type": "Marocain Gastronomique",
+            "rating": 4.5,
+            "address": "79 Sidi Ahmed Soussi, Marrakech",
+            "reviews": ["Décor des mille et une nuits", "Menu dégustation énorme", "Vue sur la médina"]
+        }
+    ]
+    
+    if cuisine_filter != "Tout":
+        return [d for d in data if cuisine_filter.lower() in d['type'].lower() or d['type'] == cuisine_filter]
+    return data
+
+# --- 4. INTERFACE UTILISATEUR (UI) ---
+
+st.title("Marrakech Foodie Guide 🕌")
+st.markdown("Découvrez les pépites culinaires de la ville ocre.")
+
+# Filtres
+col1, col2 = st.columns(2)
+with col1:
+    city = st.selectbox("Ville", ["Marrakech", "Paris (Bientôt)", "Londres (Bientôt)"])
+with col2:
+    cuisine = st.selectbox("Envie de...", ["Tout", "Marocain", "Italien", "Fusion", "Bistro"])
+
+# Chargement des données
+restaurants = get_marrakech_data(cuisine)
+
+st.write("") # Petit espace
+
+# Boucle d'affichage des cartes
+if not restaurants:
+    st.info("Aucun restaurant trouvé pour cette sélection.")
+else:
+    for resto in restaurants:
+        # Lien Profond Google Maps (Recherche précise)
+        query = urllib.parse.quote(f"{resto['name']} {resto['address']}")
+        maps_url = f"https://www.google.com/maps/search/?api=1&query={query}"
+        
+        # Image Cartoon
+        img_url = get_cartoon_avatar(resto['name'], resto['type'])
+        
+        # Affichage HTML
+        st.markdown(f"""
+        <div class="resto-card">
+            <div style="display: flex; align-items: start; gap: 15px;">
+                <img src="{img_url}" width="90" height="90" style="border-radius: 15px; border: 2px solid #E65100; flex-shrink: 0;">
+                <div style="flex-grow: 1;">
+                    <h3>{resto['name']}</h3>
+                    <span class="tag">{resto['type']}</span>
+                    <div style="color: #f1c40f; font-weight:bold; margin-top:5px;">
+                        {'★' * int(resto['rating'])} 
+                        <span style="color:#aaa; font-weight:normal;">({resto['rating']}/5)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #eee;">
+                <div style="font-size: 0.85em; color: #888; margin-bottom: 5px;">📍 {resto['address']}</div>
+                {''.join([f'<div class="review">"{avis}"</div>' for avis in resto['reviews'][:2]])}
+            </div>
+            
+            <a href="{maps_url}" target="_blank" class="maps-btn">
+                🗺️ Voir sur Google Maps
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
+
+# Pied de page
+st.divider()
+st.caption("Application de démo créée avec Streamlit et Python.")
